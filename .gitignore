@@ -1,0 +1,9 @@
+# Ignore build files
+server
+
+# Logs
+logs/
+*.log
+
+# Mac files
+.DS_Store
