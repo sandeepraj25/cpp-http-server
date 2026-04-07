@@ -1,3 +1,6 @@
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 # 🚀 CppHttpd — Advanced HTTP/1.1 Server in C++
 
 A high-performance, multithreaded HTTP/1.1 server built from scratch in modern C++.
