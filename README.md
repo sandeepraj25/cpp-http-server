@@ -3,8 +3,36 @@
 ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 # 🚀 CppHttpd — Advanced HTTP/1.1 Server in C++
 
-A high-performance, multithreaded HTTP/1.1 server built from scratch in modern C++.
-Designed with real-world backend concepts like routing, middleware, thread pooling, static file serving, and graceful shutdown.
+A high-performance, multithreaded HTTP/1.1 server built from scratch in modern C++. Designed with real-world backend concepts like routing, middleware, thread pooling, static file serving, and graceful shutdown.
+
+---
+
+## 📸 Homepage
+
+![Homepage](screenshots/homepage.png)
+
+---
+
+## 📸 API Testing
+
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/users
+curl -X POST http://localhost:8080/users \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice","email":"alice@example.com"}'
+curl http://localhost:8080/users/1
+curl -X DELETE http://localhost:8080/users/1
+curl "http://localhost:8080/echo?msg=hello"
+```
+
+![API Testing](screenshots/api.png)
+
+---
+
+## 📸 Project Structure
+
+![Structure](screenshots/structure.png)
 
 ---
 
@@ -17,15 +45,11 @@ Designed with real-world backend concepts like routing, middleware, thread pooli
 * Keep-Alive connection support for performance optimization
 * Graceful shutdown handling (SIGINT / SIGTERM)
 
----
-
 ### 🧠 Backend Architecture
 
 * Custom Router with dynamic route support (`/users/:id`)
 * Middleware pipeline (inspired by Express.js / Gin)
 * Modular and scalable project structure
-
----
 
 ### 🔌 Middleware Support
 
@@ -38,16 +62,12 @@ Designed with real-world backend concepts like routing, middleware, thread pooli
   * `X-XSS-Protection`
 * Rate limiting (per-IP sliding window)
 
----
-
 ### 📂 Static File Server
 
 * Serves files from `/static` directory
 * Automatic MIME type detection
 * In-memory caching (reduces disk I/O)
 * Directory fallback (`index.html`)
-
----
 
 ### 🔄 REST API Support
 
@@ -60,7 +80,7 @@ Designed with real-world backend concepts like routing, middleware, thread pooli
 
 ---
 
-### 🛠️ System-Level Concepts Used
+## 🛠️ System-Level Concepts Used
 
 * Socket programming (`bind`, `listen`, `accept`)
 * Multithreading (`std::thread`, `mutex`, `condition_variable`)
@@ -74,7 +94,7 @@ Designed with real-world backend concepts like routing, middleware, thread pooli
 ## 📁 Project Structure
 
 ```
-http-server/
+cpp-http-server/
 ├── src/
 │   └── main.cpp
 ├── include/
@@ -90,7 +110,11 @@ http-server/
 │   └── http_server.h
 ├── static/
 │   └── index.html
-└── Makefile
+├── screenshots/
+├── Makefile
+├── README.md
+├── LICENSE
+├── .gitignore
 ```
 
 ---
@@ -203,3 +227,4 @@ Aspiring Software Engineer | MERN + C++ Backend Developer
 ## ⭐ Show Your Support
 
 If you like this project, consider giving it a ⭐ on GitHub!
+ject, consider giving it a ⭐ on GitHub!
