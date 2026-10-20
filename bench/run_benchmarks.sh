@@ -17,7 +17,7 @@ mkdir -p logs
 # rejections, not the real request path.
 PORT="$PORT" RATE_LIMIT=off ./server > logs/bench_server.log 2>&1 &
 PID=$!
-trap 'kill $PID 2>/dev/null; wait $PID 2>/dev/null' EXIT
+trap 'kill $PID 2>/dev/null' EXIT
 sleep 1
 
 echo "CPU cores: $(getconf _NPROCESSORS_ONLN)   server threads: 8   duration: $DURATION"

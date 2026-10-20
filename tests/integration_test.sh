@@ -13,11 +13,17 @@ FAIL=0
 mkdir -p logs
 PORT="$PORT" RATE_LIMIT_MAX=1000 "$SERVER" > logs/integration_server.log 2>&1 &
 PID=$!
-trap 'kill $PID 2>/dev/null; wait $PID 2>/dev/null' EXIT
+stop_server() {
+    kill "$PID" 2>/dev/null
+    # Graceful shutdown should finish quickly; never let CI hang on it
+    for _ in $(seq 1 100); do kill -0 "$PID" 2>/dev/null || return 0; sleep 0.1; done
+    echo "  FAIL  server did not shut down within 10s"; kill -9 "$PID" 2>/dev/null; exit 1
+}
+trap stop_server EXIT
 
 # Wait until the server accepts connections
 for _ in $(seq 1 50); do
-    curl -s -o /dev/null "$BASE/health" && break
+    curl -s -m 1 -o /dev/null "$BASE/health" && break
     sleep 0.1
 done
 

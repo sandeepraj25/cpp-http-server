@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <poll.h>
 #include <csignal>
 #include <atomic>
 #include <memory>
@@ -61,6 +62,13 @@ public:
                  "  threads=", cfg_.threadPoolSize);
 
         while (running_) {
+            // Wait for a new connection, but wake up every 250 ms to check
+            // running_. Relying on shutdown() to interrupt a blocked accept()
+            // works on Linux but not on macOS, where Ctrl+C would hang forever.
+            pollfd pfd{serverFd_, POLLIN, 0};
+            int ready = poll(&pfd, 1, 250);
+            if (ready <= 0) continue;          // timeout or EINTR: re-check running_
+
             sockaddr_in clientAddr{};
             socklen_t clientLen = sizeof(clientAddr);
 

@@ -164,6 +164,7 @@ other connection.
 | Logging inside the signal handler (not async-signal-safe, can deadlock) | **ThreadSanitizer** | Handler only sets atomics and calls `shutdown()` |
 | JSON injection: `/echo?msg=a","admin":"true` added fields to the response | Code review | `jsonEscape()` on all user-provided values |
 | Pipelined requests after the first were silently dropped | Integration test | Leftover-bytes buffer in the connection handler |
+| Ctrl+C never stopped the server on **macOS**: `shutdown()` does not wake a blocked `accept()` there | macOS CI job hung | `poll()` with a 250 ms timeout before `accept()`, re-checking the shutdown flag |
 
 ---
 
