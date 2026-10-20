@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Build, unit + integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (warnings enabled)
+        run: make release
+      - name: Unit tests (with AddressSanitizer + UBSan)
+        run: make unit
+      - name: Integration tests
+        run: make integration
+
+  sanitizers:
+    name: AddressSanitizer + ThreadSanitizer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests under ASan/UBSan and TSan
+        run: make sanitize
+
+  macos:
+    name: Build and test on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: make release CXX=clang++
+      - name: Integration tests
+        run: make integration CXX=clang++

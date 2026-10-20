@@ -1,5 +1,11 @@
-# Ignore build files
+# Build outputs
 server
+server_asan
+server_tsan
+server_debug
+unit_tests
+unit_tests_tsan
+*.dSYM/
 
 # Logs
 logs/
