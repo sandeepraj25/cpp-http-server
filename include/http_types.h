@@ -15,7 +15,8 @@ struct HttpRequest {
     std::string body;
     std::unordered_map<std::string, std::string> headers;
     std::unordered_map<std::string, std::string> queryParams;
-    std::string remoteAddr;
+    std::string remoteAddr;   // "ip:port", used for logging
+    std::string clientIp;     // "ip" only, used for rate limiting
 
     bool keepAlive() const {
         auto it = headers.find("connection");
@@ -27,6 +28,34 @@ struct HttpRequest {
         return version == "HTTP/1.1"; // keep-alive is default in 1.1
     }
 };
+
+// ─── JSON helper ──────────────────────────────────────────────────────────────
+
+// Escapes a value before putting it inside a JSON string, so user input
+// like  a","admin":"true  cannot inject extra fields into the response.
+inline std::string jsonEscape(const std::string& in) {
+    std::string out;
+    out.reserve(in.size());
+    for (unsigned char c : in) {
+        switch (c) {
+            case '"':  out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\r': out += "\\r"; break;
+            case '\t': out += "\\t"; break;
+            default:
+                if (c < 0x20) {
+                    static const char* hex = "0123456789abcdef";
+                    out += "\\u00";
+                    out += hex[c >> 4];
+                    out += hex[c & 0xF];
+                } else {
+                    out += static_cast<char>(c);
+                }
+        }
+    }
+    return out;
+}
 
 // ─── Response ─────────────────────────────────────────────────────────────────
 
@@ -72,6 +101,20 @@ struct HttpResponse {
     static HttpResponse notFound(const std::string& msg = "<h1>404 Not Found</h1>") {
         HttpResponse r;
         r.statusCode = 404; r.statusText = "Not Found";
+        r.body = msg;
+        return r;
+    }
+
+    static HttpResponse badRequest(const std::string& msg = "<h1>400 Bad Request</h1>") {
+        HttpResponse r;
+        r.statusCode = 400; r.statusText = "Bad Request";
+        r.body = msg;
+        return r;
+    }
+
+    static HttpResponse forbidden(const std::string& msg = "<h1>403 Forbidden</h1>") {
+        HttpResponse r;
+        r.statusCode = 403; r.statusText = "Forbidden";
         r.body = msg;
         return r;
     }

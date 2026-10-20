@@ -6,6 +6,7 @@
 #include <chrono>
 #include <iomanip>
 #include <iostream>
+#include <ctime>
 
 enum class LogLevel { DEBUG, INFO, WARN, ERROR };
 
@@ -43,8 +44,13 @@ private:
     std::string timestamp() {
         auto now = std::chrono::system_clock::now();
         auto t   = std::chrono::system_clock::to_time_t(now);
+        // localtime_r writes into our own buffer. Plain std::localtime returns a
+        // pointer to one shared static buffer, which is a data race when many
+        // worker threads log at once (found with ThreadSanitizer).
+        std::tm tmBuf{};
+        localtime_r(&t, &tmBuf);
         std::ostringstream oss;
-        oss << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S");
+        oss << std::put_time(&tmBuf, "%Y-%m-%d %H:%M:%S");
         return oss.str();
     }
     const char* levelStr(LogLevel l) {

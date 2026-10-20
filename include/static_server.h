@@ -41,7 +41,7 @@ public:
         auto rel = reqPath.lexically_relative(rootPath);
         std::string relStr = rel.string();
         if (relStr.empty() || relStr == "." || relStr.rfind("..", 0) == 0) {
-            return HttpResponse::notFound("<h1>403 Forbidden</h1>");
+            return HttpResponse::forbidden();
         }
 
         // If directory, serve index.html

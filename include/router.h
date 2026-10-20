@@ -1,5 +1,6 @@
 #pragma once
 #include "http_types.h"
+#include "logger.h"
 #include <string>
 #include <vector>
 #include <functional>
@@ -44,8 +45,9 @@ public:
             try {
                 return route.handler(req);
             } catch (const std::exception& e) {
-                return HttpResponse::internalError(
-                    std::string("<h1>500</h1><p>") + e.what() + "</p>");
+                // Log the details, but never send internal error text to the client
+                LOG_ERROR("Handler error on ", req.method, " ", req.path, ": ", e.what());
+                return HttpResponse::internalError();
             }
         }
 

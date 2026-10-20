@@ -25,7 +25,12 @@ public:
                         tasks_.pop();
                     }
                     ++activeTasks_;
-                    task();
+                    try {
+                        task();
+                    } catch (...) {
+                        // A throwing task must not kill the worker thread
+                        // (that would call std::terminate and stop the server).
+                    }
                     --activeTasks_;
                     doneCv_.notify_all();
                 }

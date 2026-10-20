@@ -43,7 +43,8 @@ public:
             return staticServer_.serve(req);
         });
 
-        router_.get("/static/:file", [this](const HttpRequest& req) {
+        // Any file under /static, including nested folders like /static/css/app.css
+        router_.get("/static/*", [this](const HttpRequest& req) {
             return staticServer_.serve(req);
         });
     }
@@ -80,10 +81,13 @@ public:
             });
         }
 
+        if (lastSignal_ != 0)
+            LOG_INFO("Signal ", lastSignal_.load(), " received — shutting down gracefully");
         LOG_INFO("Shutting down — draining thread pool...");
         pool_.waitAll();
         pool_.shutdown();
 
+        listenFd_ = -1;
         if (serverFd_ >= 0)
             close(serverFd_);
 
@@ -92,8 +96,9 @@ public:
 
     void stop() {
         running_ = false;
-        if (serverFd_ >= 0)
-            shutdown(serverFd_, SHUT_RDWR);
+        int fd = listenFd_.load();
+        if (fd >= 0)
+            ::shutdown(fd, SHUT_RDWR);   // wakes up the blocked accept()
     }
 
 private:
@@ -104,8 +109,11 @@ private:
     StaticFileServer   staticServer_;
     int                serverFd_;
 
+    // Shared with the signal handler. Lock-free atomics are safe to touch
+    // from a signal handler; mutexes, malloc and logging are not.
     inline static std::atomic<bool> running_{true};
-    inline static HttpServer* instance_{nullptr};
+    inline static std::atomic<int>  listenFd_{-1};
+    inline static std::atomic<int>  lastSignal_{0};
 
     void setupSocket() {
         serverFd_ = socket(AF_INET, SOCK_STREAM, 0);
@@ -126,15 +134,19 @@ private:
 
         if (listen(serverFd_, cfg_.backlog) < 0)
             throw std::runtime_error("listen() failed");
+
+        listenFd_ = serverFd_;
     }
 
     void registerSignals() {
-        instance_ = this;
-
+        // The handler only does async-signal-safe work: set flags and call
+        // shutdown(). Logging here could deadlock if the signal arrives while
+        // a worker thread holds the logger mutex (found with ThreadSanitizer).
         auto handler = [](int sig) {
-            LOG_INFO("Signal ", sig, " received — shutting down gracefully");
-            if (instance_)
-                instance_->stop();
+            lastSignal_ = sig;
+            running_    = false;
+            int fd = listenFd_.load();
+            if (fd >= 0) ::shutdown(fd, SHUT_RDWR);
         };
 
         std::signal(SIGINT, handler);
